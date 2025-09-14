@@ -1,15 +1,19 @@
-[project]
+[tool.poetry]
 name = "oop-hw1"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "godmayer-jdi",email = "tig774ra@gmail.com"}
-]
+authors = ["godmayer-jdi <tig774ra@gmail.com>"]
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-]
 
+[tool.poetry.dependencies]
+python = ">=3.13"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0"
+
+[tool.poetry.packages]
+include = "src"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
