@@ -6,11 +6,12 @@ authors = ["godmayer-jdi <tig774ra@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.13"
+python = ">=3.13,<4.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
 flake8 = "^7.3.0"
+pytest = "^8.4.2"
+pytest-cov = "^7.0.0"
 
 
 [tool.poetry.group.lint.dependencies]
@@ -51,4 +52,9 @@ exclude = '''
 '''
 
 [tool.isort]
-line_length = 119
+line_length = 119                      # длина строки (уже есть у вас)
+profile = "black"                      # совместимость с Black
+multi_line_output = 3                  # стиль переноса импортов
+skip_gitignore = true                  # игнорировать то, что в .gitignore
+skip = [".git", ".mypy_cache"]         # явное игнорирование ненужных директорий
+skip_glob = ["**/migrations/*", "**/settings/*"]  # шаблоны для игнорирования
