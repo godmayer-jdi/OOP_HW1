@@ -2,7 +2,7 @@
 name = "oop-hw1"
 version = "0.1.0"
 description = ""
-authors = ["godmayer-jdi <tig774ra@gmail.com>"]
+authors = [""]
 readme = "README.md"
 
 [tool.poetry.dependencies]
