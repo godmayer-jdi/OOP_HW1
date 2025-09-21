@@ -1,59 +1,62 @@
-import json
-from pathlib import Path
-from typing import List
-
-from src.product import Category, Product, load_categories_from_json
+from src.product import Product, Category
 
 
-def test_product_init() -> None:
-    p = Product("Test", "Desc", 100.0, 5)
-    assert p.name == "Test"
-    assert p.description == "Desc"
-    assert p.price == 100.0
-    assert p.quantity == 5
+def test_add_product_and_getter():
+    cat = Category("Фрукты", "Фрукты и ягоды")
+    p1 = Product("Яблоко", "Свежие", 50, 10)
+    p2 = Product("Банан", "Спелые", 70, 5)
+    cat.add_product(p1)
+    cat.add_product(p2)
+
+    products_str = cat.products
+
+    assert "Яблоко, 50 руб. Остаток: 10 шт." in products_str
+    assert "Банан, 70 руб. Остаток: 5 шт." in products_str
+    assert Category.product_count >= 2
 
 
-def test_category_init_and_counters() -> None:
-    Category.category_count = 0
-    Category.product_count = 0
+def test_price_setter_rejects_non_positive():
+    p = Product("Молоко", "Свежие", 100, 20)
 
-    p1: Product = Product("P1", "Desc1", 10.0, 1)
-    p2: Product = Product("P2", "Desc2", 20.0, 2)
-    c: Category = Category("Cat1", "Category 1", [p1, p2])
+    old_price = p.price
+    p.price = 0  # должна остаться старая цена
+    assert p.price == old_price
 
-    assert c.name == "Cat1"
-    assert c.description == "Category 1"
-    assert len(c.products) == 2
-
-    assert Category.category_count == 1
-    assert Category.product_count == 2
+    p.price = -10  # тоже должна остаться старая цена
+    assert p.price == old_price
 
 
-def test_load_categories_from_json(tmp_path: Path) -> None:
-    data: List[dict] = [
-        {
-            "name": "CatJSON",
-            "description": "Cat Desc",
-            "products": [
-                {"name": "J1", "description": "DescJ1", "price": 1.0, "quantity": 1},
-                {"name": "J2", "description": "DescJ2", "price": 2.0, "quantity": 2},
-            ],
-        }
+def test_price_setter_allows_price_decrease(monkeypatch):
+    p = Product("Молоко", "Свежие", 100, 20)
+
+    # Симулируем ввод 'y' для подтверждения снижения цены
+    monkeypatch.setattr("builtins.input", lambda _: "y")
+    p.price = 80
+    assert p.price == 80
+
+    # Симулируем ввод 'n' для отмены снижения цены
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+    p.price = 50
+    assert p.price == 80  # цена не изменилась
+
+
+def test_new_product_and_duplicates():
+    products = [
+        Product("Хлеб", "Черный хлеб", 30, 5),
+        Product("Масло", "Сливочное", 150, 2),
     ]
-    file: Path = tmp_path / "categories.json"
-    file.write_text(json.dumps(data), encoding="utf-8")
 
-    categories: List[Category] = load_categories_from_json(str(file))
+    new_prod_dict = {"name": "Хлеб", "price": 40, "description": "Белый хлеб", "quantity": 10}
+    prod = Product.new_product(new_prod_dict, products)
 
-    assert len(categories) == 1
-    c: Category = categories[0]
-    assert c.name == "CatJSON"
-    assert c.description == "Cat Desc"
-    assert len(c.products) == 2
+    # Количество сложилось
+    assert prod.quantity == 15
+    # Цена выбрана максимальная из двух
+    assert prod.price == 40
 
-    assert isinstance(c.products[0], Product)
-    assert c.products[0].name == "J1"
-    assert c.products[0].price == 1.0
-
-    assert Category.category_count == 1
-    assert Category.product_count == 2
+    new_prod_dict2 = {"name": "Сок", "price": 90, "description": "Апельсиновый", "quantity": 4}
+    prod2 = Product.new_product(new_prod_dict2, products)
+    assert prod2.name == "Сок"
+    assert prod2.quantity == 4
+    # Проверяем, что новый продукт не добавился в исходный список напрямую
+    assert len(products) == 2
