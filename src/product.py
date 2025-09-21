@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class Product:
@@ -15,28 +15,34 @@ class Product:
         self._price = price  # приватный атрибут цены
         self.quantity = quantity
 
+    def set_price(self, new_price: float, confirm: bool = True) -> None:
+        if new_price <= 0:
+            print("Цена не должна быть нулевая или отрицательная")
+            return
+        if confirm and new_price < self._price:
+            answer = input(f"Цена понижается с {self._price} до {new_price}. Подтвердить (y/n)? ")
+            if answer.lower() != "y":
+                return
+        self._price = new_price
+
     @property
     def price(self) -> float:
         return self._price
 
     @price.setter
     def price(self, new_price: float) -> None:
-        if new_price <= 0:
-            print("Цена не должна быть нулевая или отрицательная")
-            return
-        if new_price < self._price:
-            answer = input(
-                f"Цена понижается с {self._price} до {new_price}. Подтвердить (y/n)? "
-            )
-            if answer.lower() != "y":
-                return
-        self._price = new_price
+        # При обычном использовании вызываем с подтверждением
+        self.set_price(new_price, confirm=True)
 
     @classmethod
     def new_product(
-        cls, product_dict: dict, products_list: Optional[List["Product"]] = None
+        cls,
+        product_dict: Dict[str, Any],
+        products_list: Optional[List["Product"]] = None,
     ) -> "Product":
         name = product_dict.get("name")
+        if not isinstance(name, str):
+            raise ValueError("Product name must be a string and cannot be None")
         description = product_dict.get("description", "")
         price = product_dict.get("price", 0)
         quantity = product_dict.get("quantity", 0)
@@ -46,7 +52,7 @@ class Product:
                 if prod.name == name:
                     prod.quantity += quantity
                     if price > prod.price:
-                        prod.price = price
+                        prod.set_price(price, confirm=False)  # тестовый вызов без подтверждения
                     return prod
         return cls(name, description, price, quantity)
 
@@ -55,9 +61,7 @@ class Category:
     category_count: int = 0
     product_count: int = 0
 
-    def __init__(
-        self, name: str, description: str, products: Optional[List[Product]] = None
-    ) -> None:
+    def __init__(self, name: str, description: str, products: Optional[List[Product]] = None) -> None:
         self.name = name
         self.description = description
         self.__products: List[Product] = products if products is not None else []
@@ -71,13 +75,11 @@ class Category:
 
     @property
     def products(self) -> str:
-        return "".join(
-            f"{prod.name}, {prod.price} руб. Остаток: {prod.quantity} шт.\n"
-            for prod in self.__products
-        )
+        return "".join(f"{prod.name}, {prod.price} руб. Остаток: {prod.quantity} шт.\n" for prod in self.__products)
 
 
 def load_categories_from_json(filepath: str) -> List[Category]:
+
     categories: List[Category] = []
     with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
