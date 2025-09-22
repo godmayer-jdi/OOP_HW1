@@ -1,27 +1,49 @@
 from src.product import Category, Product, load_categories_from_json
 
 if __name__ == "__main__":
-    product1: Product = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
-    product2: Product = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
-    product3: Product = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
+    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
+    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
+    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    print(product1.name)
-    print(product1.description)
-    print(product1.price)
-    print(product1.quantity)
-
-    category1: Category = Category(
+    category1 = Category(
         "Смартфоны",
-        "Смартфоны, как средство коммуникации и для удобства жизни",
+        "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
         [product1, product2, product3],
     )
 
-    print(category1.name == "Смартфоны")
-    print(category1.description)
-    print(len(category1.products))
-    print(Category.category_count)
+    print(category1.products)
+
+    product4 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
+    category1.add_product(product4)
+
+    print(category1.products)
     print(Category.product_count)
 
-    categories_from_json = load_categories_from_json("products.json")
+    new_product = Product.new_product(
+        {
+            "name": "Samsung Galaxy S23 Ultra",
+            "description": "256GB, Серый цвет, 200MP камера",
+            "price": 180000.0,
+            "quantity": 5,
+        },
+        products_list=[product1, product2, product3, product4],
+    )
+
+    print(new_product.name)
+    print(new_product.description)
+    print(new_product.price)
+    print(new_product.quantity)
+
+    new_product.price = 800
+    print(new_product.price)
+
+    new_product.price = -100
+    print(new_product.price)
+
+    new_product.price = 0
+    print(new_product.price)
+
+    categories_from_json = load_categories_from_json("data/products.json")
     for cat in categories_from_json:
-        print(f"Category {cat.name} with {len(cat.products)} products")
+        # Сплит по строкам для подсчета количества продуктов
+        print(f"Category {cat.name} with {len(cat.products.splitlines())} products")
