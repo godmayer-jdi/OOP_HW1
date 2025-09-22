@@ -12,26 +12,25 @@ class Product:
     ) -> None:
         self.name = name
         self.description = description
-        self._price = price  # приватный атрибут цены
+        self.__price = price  # двойное подчёркивание для приватности
         self.quantity = quantity
 
     def set_price(self, new_price: float, confirm: bool = True) -> None:
         if new_price <= 0:
             print("Цена не должна быть нулевая или отрицательная")
             return
-        if confirm and new_price < self._price:
-            answer = input(f"Цена понижается с {self._price} до {new_price}. Подтвердить (y/n)? ")
+        if confirm and new_price < self.__price:
+            answer = input(f"Цена понижается с {self.__price} до {new_price}. Подтвердить (y/n)? ")
             if answer.lower() != "y":
                 return
-        self._price = new_price
+        self.__price = new_price
 
     @property
     def price(self) -> float:
-        return self._price
+        return self.__price
 
     @price.setter
     def price(self, new_price: float) -> None:
-        # При обычном использовании вызываем с подтверждением
         self.set_price(new_price, confirm=True)
 
     @classmethod
@@ -52,7 +51,7 @@ class Product:
                 if prod.name == name:
                     prod.quantity += quantity
                     if price > prod.price:
-                        prod.set_price(price, confirm=False)  # тестовый вызов без подтверждения
+                        prod.set_price(price, confirm=False)
                     return prod
         return cls(name, description, price, quantity)
 

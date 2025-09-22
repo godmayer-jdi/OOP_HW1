@@ -19,10 +19,10 @@ def test_price_setter_rejects_non_positive() -> None:
     p = Product("Молоко", "Свежие", 100, 20)
 
     old_price = p.price
-    p.price = 0  # Цена не изменится
+    p.price = 0
     assert p.price == old_price
 
-    p.price = -10  # Цена не изменится
+    p.price = -10
     assert p.price == old_price
 
 
