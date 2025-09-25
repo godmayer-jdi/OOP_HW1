@@ -1,59 +1,63 @@
-import json
-from pathlib import Path
-from typing import List
-
-from src.product import Category, Product, load_categories_from_json
+from src.product import Category, CategoryIterator, Product
 
 
-def test_product_init() -> None:
-    p = Product("Test", "Desc", 100.0, 5)
-    assert p.name == "Test"
-    assert p.description == "Desc"
-    assert p.price == 100.0
-    assert p.quantity == 5
+def test_product_price_getter_setter() -> None:
+    p = Product("Хлеб", "Свежий хлеб", 50.0, 10)
+    assert p.price == 50.0
+
+    p.price = 60.0
+    assert p.price == 60.0
+
+    # Проверка установки отрицательной цены - цена не меняется
+    p.price = -10.0
+    assert p.price == 60.0
 
 
-def test_category_init_and_counters() -> None:
-    Category.category_count = 0
-    Category.product_count = 0
-
-    p1: Product = Product("P1", "Desc1", 10.0, 1)
-    p2: Product = Product("P2", "Desc2", 20.0, 2)
-    c: Category = Category("Cat1", "Category 1", [p1, p2])
-
-    assert c.name == "Cat1"
-    assert c.description == "Category 1"
-    assert len(c.products) == 2
-
-    assert Category.category_count == 1
-    assert Category.product_count == 2
+def test_product_str() -> None:
+    p = Product("Молоко", "Свежее", 70.5, 5)
+    expected_str = "Молоко, 70.5 руб. Остаток: 5 шт."
+    assert str(p) == expected_str
 
 
-def test_load_categories_from_json(tmp_path: Path) -> None:
-    data: List[dict] = [
-        {
-            "name": "CatJSON",
-            "description": "Cat Desc",
-            "products": [
-                {"name": "J1", "description": "DescJ1", "price": 1.0, "quantity": 1},
-                {"name": "J2", "description": "DescJ2", "price": 2.0, "quantity": 2},
-            ],
-        }
-    ]
-    file: Path = tmp_path / "categories.json"
-    file.write_text(json.dumps(data), encoding="utf-8")
+def test_product_add() -> None:
+    p1 = Product("Молоко", "Свежее", 70, 5)  # 350
+    p2 = Product("Хлеб", "Свежий", 50, 10)  # 500
+    total = p1 + p2
+    assert total == 850
 
-    categories: List[Category] = load_categories_from_json(str(file))
 
-    assert len(categories) == 1
-    c: Category = categories[0]
-    assert c.name == "CatJSON"
-    assert c.description == "Cat Desc"
-    assert len(c.products) == 2
+def test_category_add_product_and_str() -> None:
+    cat = Category("Продукты", "Категория продуктов")
+    p1 = Product("Яблоко", "Свежие", 40, 15)
+    p2 = Product("Банан", "Свежие", 60, 5)
 
-    assert isinstance(c.products[0], Product)
-    assert c.products[0].name == "J1"
-    assert c.products[0].price == 1.0
+    cat.add_product(p1)
+    cat.add_product(p2)
 
-    assert Category.category_count == 1
-    assert Category.product_count == 2
+    products_str = cat.products
+    assert "Яблоко" in products_str
+    assert "Банан" in products_str
+
+    expected_str = "Продукты, количество продуктов: 20 шт."
+    assert str(cat) == expected_str
+
+
+def test_category_iterator() -> None:
+    p1 = Product("Яблоко", "Свежие", 40, 15)
+    p2 = Product("Банан", "Свежие", 60, 5)
+    cat = Category("Фрукты", "Сладкие")
+    cat.add_product(p1)
+    cat.add_product(p2)
+
+    iter_obj = CategoryIterator(cat)
+    products = list(iter_obj)
+    assert products == [p1, p2]
+
+
+def test_product_new_product_method() -> None:
+    products_list = [Product("Яблоко", "Свежие", 40, 10)]
+    new_prod_dict = {"name": "Яблоко", "description": "Зеленое", "price": 50, "quantity": 5}
+    prod = Product.new_product(new_prod_dict, products_list)
+
+    assert prod.quantity == 15  # Количество увеличилось
+    assert prod.price == 50  # Цена обновилась, так как новая выше
