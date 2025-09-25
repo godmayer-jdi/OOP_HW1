@@ -1,4 +1,4 @@
-from src.product import Product, Category, CategoryIterator
+from src.product import Category, CategoryIterator, Product
 
 
 def test_product_str() -> None:
@@ -21,7 +21,7 @@ def test_category_str_and_products() -> None:
 
 def test_product_addition() -> None:
     p1 = Product("Товар1", "Описание1", 100, 10)  # 1000
-    p2 = Product("Товар2", "Описание2", 200, 2)   # 400
+    p2 = Product("Товар2", "Описание2", 200, 2)  # 400
     assert p1 + p2 == 1400
 
 

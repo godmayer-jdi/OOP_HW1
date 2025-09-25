@@ -1,4 +1,5 @@
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 
 class Product:
     def __init__(
@@ -18,9 +19,7 @@ class Product:
             print("Цена не должна быть нулевая или отрицательная")
             return
         if confirm and new_price < self.__price:
-            answer = input(
-                f"Цена понижается с {self.__price} до {new_price}. Подтвердить (y/n)? "
-            )
+            answer = input(f"Цена понижается с {self.__price} до {new_price}. Подтвердить (y/n)? ")
             if answer.lower() != "y":
                 return
         self.__price = new_price
@@ -68,9 +67,7 @@ class Category:
     category_count: int = 0
     product_count: int = 0
 
-    def __init__(
-        self, name: str, description: str, products: Optional[List[Product]] = None
-    ) -> None:
+    def __init__(self, name: str, description: str, products: Optional[List[Product]] = None) -> None:
         self.name = name
         self.description = description
         self.__products: List[Product] = products if products is not None else []
