@@ -1,6 +1,6 @@
 import pytest
 
-from src.product import Smartphone, LawnGrass, Category, CategoryIterator
+from src.product import Category, CategoryIterator, LawnGrass, Smartphone
 
 
 def test_smartphone_attributes() -> None:
