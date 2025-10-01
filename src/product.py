@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Any
 
 
 class BaseProduct(ABC):
@@ -35,7 +35,7 @@ class PrintInfoMixin:
     Миксин, который при создании объекта выводит информацию о классе и аргументах.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         cls_name = self.__class__.__name__
         print(f"Создан объект класса {cls_name} с аргументами: args={args}, kwargs={kwargs}")
         super().__init__(*args, **kwargs)
@@ -73,9 +73,7 @@ class Category:
     category_count: int = 0
     product_count: int = 0
 
-    def __init__(
-        self, name: str, description: str, products: Optional[List[Product]] = None
-    ) -> None:
+    def __init__(self, name: str, description: str, products: Optional[List[Product]] = None) -> None:
         self.name = name
         self.description = description
         self.__products: List[Product] = products if products is not None else []
@@ -84,9 +82,7 @@ class Category:
 
     def add_product(self, product: Product) -> None:
         if not isinstance(product, Product):
-            raise TypeError(
-                "Можно добавлять только объекты класса Product или его наследников"
-            )
+            raise TypeError("Можно добавлять только объекты класса Product или его наследников")
         self.__products.append(product)
         Category.product_count += 1
 

@@ -1,5 +1,6 @@
 import pytest
-from src.product import Product, Category
+
+from src.product import Category, Product
 
 
 def test_product_creation_and_str() -> None:
