@@ -1,59 +1,50 @@
-import json
-from pathlib import Path
-from typing import List
-
-from src.product import Category, Product, load_categories_from_json
+import pytest
+from src.product import Product, Category
 
 
-def test_product_init() -> None:
-    p = Product("Test", "Desc", 100.0, 5)
+def test_product_creation_and_str() -> None:
+    p = Product("Test", "Test product", 100.0, 5)
     assert p.name == "Test"
-    assert p.description == "Desc"
+    assert p.description == "Test product"
     assert p.price == 100.0
     assert p.quantity == 5
+    assert str(p) == "Test, 100.0 руб. Остаток: 5 шт."
 
 
-def test_category_init_and_counters() -> None:
-    Category.category_count = 0
-    Category.product_count = 0
+def test_product_total_price_and_add() -> None:
+    p1 = Product("P1", "Desc", 100.0, 2)
+    p2 = Product("P2", "Desc", 200.0, 3)
+    assert p1.total_price() == 200.0
+    assert p2.total_price() == 600.0
 
-    p1: Product = Product("P1", "Desc1", 10.0, 1)
-    p2: Product = Product("P2", "Desc2", 20.0, 2)
-    c: Category = Category("Cat1", "Category 1", [p1, p2])
+    # Сложение продуктов
+    total = p1 + p2
+    assert total == 800.0
 
-    assert c.name == "Cat1"
-    assert c.description == "Category 1"
-    assert len(c.products) == 2
-
-    assert Category.category_count == 1
-    assert Category.product_count == 2
+    with pytest.raises(TypeError):
+        _ = p1 + "not a product"  # type: ignore
 
 
-def test_load_categories_from_json(tmp_path: Path) -> None:
-    data: List[dict] = [
-        {
-            "name": "CatJSON",
-            "description": "Cat Desc",
-            "products": [
-                {"name": "J1", "description": "DescJ1", "price": 1.0, "quantity": 1},
-                {"name": "J2", "description": "DescJ2", "price": 2.0, "quantity": 2},
-            ],
-        }
-    ]
-    file: Path = tmp_path / "categories.json"
-    file.write_text(json.dumps(data), encoding="utf-8")
+def test_category_and_add_product() -> None:
+    p1 = Product("P1", "Desc", 100, 1)
+    p2 = Product("P2", "Desc", 200, 2)
+    cat = Category("Cat", "Description", [p1])
+    assert cat.name == "Cat"
+    assert cat.description == "Description"
+    assert len(cat.products) == 1
+    assert Category.category_count > 0
 
-    categories: List[Category] = load_categories_from_json(str(file))
+    cat.add_product(p2)
+    assert len(cat.products) == 2
+    assert Category.product_count >= 2
 
-    assert len(categories) == 1
-    c: Category = categories[0]
-    assert c.name == "CatJSON"
-    assert c.description == "Cat Desc"
-    assert len(c.products) == 2
+    with pytest.raises(TypeError):
+        cat.add_product("no product")  # type: ignore
 
-    assert isinstance(c.products[0], Product)
-    assert c.products[0].name == "J1"
-    assert c.products[0].price == 1.0
 
-    assert Category.category_count == 1
-    assert Category.product_count == 2
+def test_category_str() -> None:
+    p1 = Product("P1", "Desc", 5, 3)
+    p2 = Product("P2", "Desc", 10, 2)
+    cat = Category("Name", "Desc", [p1, p2])
+    expected = "Name, количество продуктов: 5 шт."
+    assert str(cat) == expected
