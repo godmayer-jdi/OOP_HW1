@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 
 class BaseProduct(ABC):
     """
-    Абстрактный базовый класс для продукта.
-    Содержит общие свойства и методы, обязательные для реализации во всех продуктах.
+    Абстрактный базовый класс, задающий общие атрибуты и интерфейс для всех продуктов.
     """
 
     @abstractmethod
@@ -17,22 +16,13 @@ class BaseProduct(ABC):
 
     @abstractmethod
     def __str__(self) -> str:
-        """
-        Строковое представление продукта.
-        """
-        pass
-
-    @abstractmethod
-    def total_price(self) -> float:
-        """
-        Общая стоимость товара с учётом количества.
-        """
+        """Строковое представление продукта."""
         pass
 
 
 class PrintInfoMixin:
     """
-    Миксин, который при создании объекта выводит информацию о классе и аргументах.
+    Миксин, выводящий в консоль информацию о создаваемом объекте.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -41,42 +31,138 @@ class PrintInfoMixin:
         super().__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
-        attrs = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
+        attrs = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
         return f"{self.__class__.__name__}({attrs})"
 
 
 class Product(PrintInfoMixin, BaseProduct):
     """
-    Класс продукта, наследует общий абстрактный продукт и миксин для печати информации.
+    Класс продукта, наследует миксин для логирования и базовый абстрактный продукт.
     """
 
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+    ) -> None:
+        self.__price = price  # приватный
         super().__init__(name, description, price, quantity)
 
-    def __str__(self) -> str:
-        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+    def set_price(self, new_price: float, confirm: bool = True) -> None:
+        if new_price <= 0:
+            print("Цена не должна быть нулевая или отрицательная")
+            return
+        if confirm and new_price < self.__price:
+            answer = input(f"Цена понижается с {self.__price} до {new_price}. Подтвердить (y/n)? ")
+            if answer.lower() != "y":
+                return
+        self.__price = new_price
 
-    def total_price(self) -> float:
-        return self.price * self.quantity
+    @property
+    def price(self) -> float:
+        return self.__price
+
+    @price.setter
+    def price(self, new_price: float) -> None:
+        self.set_price(new_price, confirm=True)
+
+    def __str__(self) -> str:
+        return f"{self.name}, {self.__price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other: "Product") -> float:
         if type(self) is not type(other):
-            raise TypeError("Можно складывать только объекты одного класса")
-        return self.total_price() + other.total_price()
+            raise TypeError("Сложение возможно только между объектами одного класса")
+        return (self.price * self.quantity) + (other.price * other.quantity)
+
+    @classmethod
+    def new_product(
+        cls,
+        product_dict: Dict[str, Any],
+        products_list: Optional[List["Product"]] = None,
+    ) -> "Product":
+        name = product_dict.get("name")
+        if not isinstance(name, str):
+            raise ValueError("Product name must be a string and cannot be None")
+        description = product_dict.get("description", "")
+        price = product_dict.get("price", 0)
+        quantity = product_dict.get("quantity", 0)
+
+        if products_list is not None:
+            for prod in products_list:
+                if prod.name == name:
+                    prod.quantity += quantity
+                    if price > prod.price:
+                        prod.set_price(price, confirm=False)
+                    return prod
+        return cls(name, description, price, quantity)
+
+
+class Smartphone(Product):
+    """
+    Класс смартфона, наследуется от Product,
+    расширяет дополнительные атрибуты.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+
+class LawnGrass(Product):
+    """
+    Класс газонной травы, наследуется от Product,
+    расширяет дополнительные атрибуты.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: str,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
 
 
 class Category:
     """
-    Класс категории, хранит продукты и их количество, имеет имя и описание.
+    Класс категории товаров с подсчетом товаров и категорией.
     """
 
     category_count: int = 0
     product_count: int = 0
 
-    def __init__(self, name: str, description: str, products: Optional[List[Product]] = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        products: Optional[List[Product]] = None,
+    ) -> None:
         self.name = name
         self.description = description
         self.__products: List[Product] = products if products is not None else []
+
         Category.category_count += 1
         Category.product_count += len(self.__products)
 
@@ -87,9 +173,30 @@ class Category:
         Category.product_count += 1
 
     @property
-    def products(self) -> List[Product]:
+    def products(self) -> str:
+        return "".join(str(prod) + "\n" for prod in self.__products)
+
+    @property
+    def product_list(self) -> List[Product]:
         return self.__products
 
     def __str__(self) -> str:
         total_quantity = sum(prod.quantity for prod in self.__products)
         return f"{self.name}, количество продуктов: {total_quantity} шт."
+
+
+class CategoryIterator:
+    def __init__(self, category: Category) -> None:
+        self._products = category.product_list
+        self._index = 0
+
+    def __iter__(self) -> "CategoryIterator":
+        return self
+
+    def __next__(self) -> Product:
+        if self._index < len(self._products):
+            product = self._products[self._index]
+            self._index += 1
+            return product
+        else:
+            raise StopIteration()
