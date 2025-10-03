@@ -9,7 +9,7 @@ def test_product_zero_quantity() -> None:
     assert str(exc.value) == "Товар с нулевым количеством не может быть добавлен"
 
 
-def test_category_average_price() -> None:
+def test_category_middle_price() -> None:
     p1 = Product("p1", "desc", 50, 1)
     p2 = Product("p2", "desc", 100, 1)
     cat = Category("cat", "desc", [p1, p2])
