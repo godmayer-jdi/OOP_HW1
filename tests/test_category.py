@@ -1,5 +1,6 @@
 import pytest
-from src.product import Product, Category, ZeroQuantityError
+
+from src.product import Category, Product, ZeroQuantityError
 
 
 def test_product_zero_quantity() -> None:

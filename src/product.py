@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 
 class ZeroQuantityError(ValueError):
     """Исключение для товара с нулевым количеством."""
+
     pass
 
 
