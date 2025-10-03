@@ -2,9 +2,15 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 
+class ZeroQuantityError(ValueError):
+    """Исключение для товара с нулевым количеством."""
+
+    pass
+
+
 class BaseProduct(ABC):
     """
-    Абстрактный базовый класс, задающий общие атрибуты и интерфейс для всех продуктов.
+    Абстрактный базовый класс, задаёт общие атрибуты и интерфейс продукта.
     """
 
     @abstractmethod
@@ -16,13 +22,12 @@ class BaseProduct(ABC):
 
     @abstractmethod
     def __str__(self) -> str:
-        """Строковое представление продукта."""
         pass
 
 
 class PrintInfoMixin:
     """
-    Миксин, выводящий в консоль информацию о создаваемом объекте.
+    Миксин, выводит информацию о создаваемом экземпляре.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -36,18 +41,10 @@ class PrintInfoMixin:
 
 
 class Product(PrintInfoMixin, BaseProduct):
-    """
-    Класс продукта, наследует миксин для логирования и базовый абстрактный продукт.
-    """
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        price: float,
-        quantity: int,
-    ) -> None:
-        self.__price = price  # приватный
+    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+        if quantity == 0:
+            raise ZeroQuantityError("Товар с нулевым количеством не может быть добавлен")
+        self.__price = price
         super().__init__(name, description, price, quantity)
 
     def set_price(self, new_price: float, confirm: bool = True) -> None:
@@ -100,11 +97,6 @@ class Product(PrintInfoMixin, BaseProduct):
 
 
 class Smartphone(Product):
-    """
-    Класс смартфона, наследуется от Product,
-    расширяет дополнительные атрибуты.
-    """
-
     def __init__(
         self,
         name: str,
@@ -124,11 +116,6 @@ class Smartphone(Product):
 
 
 class LawnGrass(Product):
-    """
-    Класс газонной травы, наследуется от Product,
-    расширяет дополнительные атрибуты.
-    """
-
     def __init__(
         self,
         name: str,
@@ -146,10 +133,6 @@ class LawnGrass(Product):
 
 
 class Category:
-    """
-    Класс категории товаров с подсчетом товаров и категорией.
-    """
-
     category_count: int = 0
     product_count: int = 0
 
@@ -172,6 +155,15 @@ class Category:
         self.__products.append(product)
         Category.product_count += 1
 
+    def middle_price(self) -> float:
+        try:
+            if len(self.__products) == 0:
+                return 0.0
+            total_price = sum(prod.price for prod in self.__products)
+            return total_price / len(self.__products)
+        except ZeroDivisionError:
+            return 0.0
+
     @property
     def products(self) -> str:
         return "".join(str(prod) + "\n" for prod in self.__products)
@@ -183,20 +175,3 @@ class Category:
     def __str__(self) -> str:
         total_quantity = sum(prod.quantity for prod in self.__products)
         return f"{self.name}, количество продуктов: {total_quantity} шт."
-
-
-class CategoryIterator:
-    def __init__(self, category: Category) -> None:
-        self._products = category.product_list
-        self._index = 0
-
-    def __iter__(self) -> "CategoryIterator":
-        return self
-
-    def __next__(self) -> Product:
-        if self._index < len(self._products):
-            product = self._products[self._index]
-            self._index += 1
-            return product
-        else:
-            raise StopIteration()
